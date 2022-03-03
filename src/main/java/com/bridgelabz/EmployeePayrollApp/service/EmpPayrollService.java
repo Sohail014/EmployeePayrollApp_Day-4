@@ -1,41 +1,80 @@
 package com.bridgelabz.EmployeePayrollApp.service;
 
+
+import com.bridgelabz.EmployeePayrollApp.dto.EmployeePayrollDTO;
+import com.bridgelabz.EmployeePayrollApp.exception.EmployeePayrollException;
 import com.bridgelabz.EmployeePayrollApp.model.Employee;
 import com.bridgelabz.EmployeePayrollApp.repository.EmployeePayrollRepository;
-import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Optional;
+
 
 @Service
-public class EmpPayrollService {
+public class EmpPayrollService implements IEmpPayrollServices {
 
     @Autowired
-    EmployeePayrollRepository employeePayrollRepository;
+    private EmployeePayrollRepository employeeRepository;
 
-    public Employee createEmpData(Employee model) {
-        return employeePayrollRepository.save(model);
+
+    /**
+     * accepts the employee data in the form of EmployeePayrollDTO and stores it in DB
+     * @param empPayrollDTO - represents object of EmployeePayrollDTO class
+     * @return accepted employee information in JSON format
+     */
+
+    @Override
+    public Employee createEmployeePayrollData(EmployeePayrollDTO empPayrollDTO) {
+        Employee employee = new Employee(empPayrollDTO);
+        return employeeRepository.save(employee);
     }
 
-    public List<Employee> getEmpData() {
-        return employeePayrollRepository.findAll();
+
+
+    /**
+     * @return list of employee information from DB
+     */
+    @Override
+    public List<Employee> getEmployeePayrollData() {
+        return (List<Employee>) employeeRepository.findAll();
     }
 
-    public Optional<Employee> getByID(int id) {
-        return employeePayrollRepository.findById(id);
-
+    /**
+     * @param empId - represents employee id
+     * @return employee information with same empId
+     */
+    @Override
+    public Employee getEmployeePayrollDataById(int empId) {
+        return employeeRepository.findById(empId).orElseThrow(() -> new EmployeePayrollException("Employee with employee Id"+empId
+                +"  does not exist!!"));
     }
 
-    public void deleteById(int id) {
-        employeePayrollRepository.deleteById(id);
+
+
+    /**
+     * accepts the employee data in the form of EmployeePayrollDTO and
+     * updates the employee having same empId from database
+     * @param empId - represents employee id
+     * @param empPayrollDTO - represents object of EmployeePayrollDTO class
+     * @return	updated employee information in JSON format
+     */
+    @Override
+    public Employee updateEmployeePayrollData(int empId, EmployeePayrollDTO empPayrollDTO) {
+        Employee empData = this.getEmployeePayrollDataById(empId);
+        empData.updateEmployeePayrollData(empPayrollDTO);
+        return employeeRepository.save(empData);
     }
 
-    public Employee updateDataById(Integer id, @NotNull  Employee model) {
-        Employee newEmployee = new Employee(id, model.getFirstName(), model .getLastName(), model .getProfilePic(),model.getGender(), model .getDepartment(), model .getSalary(), model .getDate(), model .getNotes());
-        return employeePayrollRepository.save(newEmployee);
+    /**accepts the empId and deletes the data of that employee from DB
+     * @param empId - represents employee id
+     * @return empId and Acknowledgment message
+     */
 
-
+    @Override
+    public void deleteEmployeePayrollData(int empId) {
+        Employee empData = this.getEmployeePayrollDataById(empId);
+        employeeRepository.delete(empData);
     }
+
 }
